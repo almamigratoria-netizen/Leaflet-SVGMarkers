@@ -38,7 +38,7 @@ icon.  You probably want to use this in conjunction with `class:`
 __glyphs tested with font-awesome 4.7, boxicons, bootstrap-icons 1.13.1__
 * `class:` add a whitespace separated list of classes to the SVG element.
 * `image:` SVG (string) or URL.  Adds a user supplied image to the SVG.
-* `imageOpts:` attributes for the image.  Typically you should supply width and height (both default to 15, the standard Maki-icon size).  Supply x and y to center the image (although it will try to center with the information it has). 
+* `imageOpts:` attributes for the image.  Typically you should supply width and height (both default to 15, the standard Maki-icon size).  Supply x and y to center the image (although it will try to center with the information it has).  `image`s are created using the SVG `<image>` tag, so sttributes aren't exactly the same as for `Image()`, but there are plenty of [references](https://developer.mozilla.org/en-US/docs/Web/SVG/Reference/Element/image) out there.
 * Any option not understood will try to be applied to the "style" attributes, which may or may not be what you want.
 
 ## The SVGMarkerUtil class
