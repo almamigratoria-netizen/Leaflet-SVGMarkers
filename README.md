@@ -11,7 +11,7 @@ View the [demo](https://github.com/alamagratoria-netizen/Leaflet-SVGMarker/)
 
 ## Usage
 ```js
-import {Map, TileLayer} from "./leaflet.js";
+import {Map, TileLayer} from 'leaflet';
 import {SVGMarker} from "./SVGMarker.js";
 
 const OSM = 'https://{s}.tile.osm.org/{x}/{y}/{z}.png';

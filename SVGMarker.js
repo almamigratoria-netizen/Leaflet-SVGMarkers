@@ -2,12 +2,12 @@
 // SVGMarkers.js
 //
 // ESM for Leaflet v2 to create css styled SVG markers.
+// No DivIcons, no <img> tags, no dependencies
+// ... and so far no shadows, but I'm working on it.
 //
 // default export is the SVGMarker class.  
 // also available are SVGIcon and SVGMarkerUtil
 //
-// I learned that SVG's in <img> tags can't use external <use> or external CSS
-// That's sad.   
 // This module was created not so much because I really like SVG's, but
 // more so that I could learn a little bit about how SVG's work and a bit
 // about extending leaflet v2
