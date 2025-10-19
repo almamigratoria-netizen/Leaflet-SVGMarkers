@@ -23,8 +23,8 @@ const newMarker = new SVGMarker([52.5, 13.405], {color: 'black', glyph: 'bi-bank
 newMarker.addTo(map);
 ```
 
-## Options
-* `shape:`: 'square' or 'penta'.  Easily extensible, just add a path to the 'extra\_paths' object.
+## Options (all of which are optinal, hence the name)
+* `shape:`: 'square' or 'penta'.  Easily extensible, just add a path to the 'extra\_paths' object.  Defaults the the familiar vanilla map pin.
 * `color:` sets the stroke and fill style attributes.  Only colors supported by CSS are accepted.
 * `stroke:` sets the stroke attribute
 * `fill:` sets the fill attribute 
@@ -40,6 +40,14 @@ __glyphs tested with font-awesome 4.7, boxicons, bootstrap-icons 1.13.1__
 * `image:` SVG (string) or URL.  Adds a user supplied image to the SVG.
 * `imageOpts:` attributes for the image.  Typically you should supply width and height (both default to 15, the standard Maki-icon size).  Supply x and y to center the image (although it will try to center with the information it has).  `image`s are created using the SVG `<image>` tag, so sttributes aren't exactly the same as for `Image()`, but there are plenty of [references](https://developer.mozilla.org/en-US/docs/Web/SVG/Reference/Element/image) out there.
 * Any option not understood will try to be applied to the "style" attributes, which may or may not be what you want.
+
+## CSS specificity
+The order of precedence for specificity (from most important to least) is:
+- element style
+- #id
+- .class
+- type (<circle>, <path>, etc)
+- SVG presentation attributes
 
 ## The SVGMarkerUtil class
 You can also import the SVGMarkerUtil class.  There are some potentially 
