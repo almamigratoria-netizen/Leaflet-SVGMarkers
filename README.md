@@ -5,7 +5,7 @@ Provides pure SVG markers (no more DivIcons, no unstylable dataURL's) for Leafle
 Basically I wanted colorable markers that would take glyphs and couldn't find
 a suitable plugin for Leaflet v2, so whipped this up.  
 
-View the [demo](https://github.com/alamagratoria-netizen/Leaflet-SVGMarker/)
+View the [demo](https://almamigratoria-netizen.github.io/Leaflet-SVGMarkers/)
 
 ![Screenshot](./Screenshot.png "Screenshot")
 
