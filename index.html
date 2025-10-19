@@ -84,7 +84,12 @@
       const mPop = function(latlng, options, text="") {
           let m = new SVGMarker(latlng, options);
           if (text.length) { text += "<br/>" }
-          let Pop = m.bindPopup(text + JSON.stringify(options, null, 2).replaceAll('\n','<br/>').replaceAll(' ', '&nbsp;'));
+          let Pop;
+          if (options) {
+              Pop = m.bindPopup(text + JSON.stringify(options, null, 2).replaceAll('\n','<br/>').replaceAll(' ', '&nbsp;'));
+          } else {
+              Pop = m.bindPopup(text);
+          }
           return Pop;
       }
 
@@ -96,12 +101,13 @@
       mPop([52.5, 13.39], {color: '#000000', glyph: 'bi-tsunami', glyphColor: 'yellow'}).addTo(map);
       mPop([52.5, 13.395], {number: 3, color: 'black'}).addTo(map);
       mPop([52.5, 13.4], {class: 'pulse'}, "CSS gradient").addTo(map);
-      mPop([52.5, 13.405], {}, "Vanilla SVGMarker").addTo(map)
+      mPop([52.5, 13.405], undefined, "Vanilla SVGMarker").addTo(map)
       mPop([52.5, 13.41], {color: 'hsl(120, 100%, 50%)'}).addTo(map);
       mPop([52.495, 13.39], {stroke: 'red', 'stroke-width': '1px'}).addTo(map);
       mPop([52.495, 13.395], {image: './wetland.svg', imageOpts: {width: '15', height:'15'}}).addTo(map);
       mPop([52.495, 13.4], {glyph: 'bx-bed', color: 'gold', glyphColor: 'black'}).addTo(map);
       mPop([52.495, 13.405], {color:'red',style:'.ghost {opacity:0.4;filter:blur(3px);}',class:'ghost'}).addTo(map);
+      mPop([52.495, 13.41], {color:'white',number:"\u03c0",glyphColor:'red'}).addTo(map);
 
       setTimeout(() => { 
         manymarkers(250);
