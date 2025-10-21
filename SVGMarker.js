@@ -87,7 +87,10 @@ const defaultOptions = {  // same as L.Icon
 };
 
 class SVGMarkerUtil {
+    // append SVG <def>'s to the DOM so we can use them for
+    // gradients and transforms etc.
     static svgExport(svg=null) {
+        // PLACEHOLDER FOR NOW.
         // deserialize if necessary,
         // wrap in <svg> tag if all they gave us was a <def> or gradient
         // append to DOM
@@ -104,13 +107,14 @@ class SVGMarkerUtil {
     }
 
     static serializeSVG(svgElement) {
-        // check if arg === element.  Could also allow selectors.
+        // check if arg === element.  Could also allow selectors?
         const serializer = new XMLSerializer();
         const svgString = serializer.serializeToString(svgElement);
         return svgString;
     }
 
     // Create a dataURL from an SVG for use as img.src (not unicode safe!)
+    // We no longer use this. SVG's in <img>'s can be styled
     static svgToDataURL(inputSVG) {
         if (inputSVG instanceof SVGSVGElement) {
             inputSVG = SVGMarkerUtil.serializeSVG(inputSVG);
@@ -133,9 +137,8 @@ class SVGMarkerUtil {
             }
             return svgDoc.documentElement;
         } catch(e) {
-            console.warn("svgDeserialize:", e);
-            console.warn("You might need TrustedHTML");
-            console.log(e.message);
+            console.warn(`svgDeserialize: ${e.name} ${e.message}`);
+            console.warn("You might want to pass TrustedHTML");
             return SVGMarkerUtil.kludge_svgDeserializer(inputSVG);
         }
     }
@@ -143,15 +146,10 @@ class SVGMarkerUtil {
     // This is a kludge.  You really can't parse XML with regex.
     // But it was fun to build.
     static kludge_svgDeserializer(svgString, options={}) {
-        // Regex unescaper
         function unescapeRegexString(escapedString) {
-          // Unescape common regex special characters
           let u = escapedString.replace(/\\([.*+?()[\]{}|^$])/g, '$1');
-          // Unescape forward slashes
           u = u.replace(/\\\//g, '/');
-          // Unescape escaped backslashes (\\ becomes \)
           u = u.replace(/\\\\/g, '\\');
-          // Unescape hex encoding
           u = u.replace(/\\x([0-9A-Fa-f]{2})/g, function(match, hex) {
               return String.fromCharCode(parseInt(hex, 16));
           });
@@ -159,7 +157,6 @@ class SVGMarkerUtil {
         }
 
         // Use a stack instead of recursion.  Might refactor it later. 
-        //
         let tagStack = []; 
         // /<(\w+)([^>]*)>.*?</\1>/   (Doesn't match self-closers)
         const re_tag = /<\s*(?<tagclose>[\/])?\s*(?<tag>\/?\w+)\s*(?<attribs>[^>]*)?>/g;
@@ -206,15 +203,12 @@ class SVGMarkerUtil {
         }
         return el;
     }
-    // Do we need an svgExport function?  To wrap <def>'s
-    // and append them to the DOM?
 }
 
 
 class SVGIcon extends Icon {
 
-    // Build the icon from (mostly) scratch.  May need to rework it a tad
-    // if we start adding shaped icons like ExtraMarkers had.
+    // Build the icon from (mostly) scratch.
     _createSVGIcon(options) {
         let icon = default_SVGIcon.cloneNode(true);
         let ignore_these_keys = [
