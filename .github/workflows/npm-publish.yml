@@ -26,10 +26,8 @@ jobs:
       - name: Install dependencies
         run: npm ci # Use npm ci for clean installs in CI environments
 
+
       - name: Publish to npm
         run: npm publish --provenance --access public
-        env:
-          NODE_AUTH_TOKEN: ${{ secrets.SVGMARKER_NPM }} # Use a GitHub Secret for your npm token
-      - run: npm publish
         env:
           NODE_AUTH_TOKEN: ${{secrets.SVGMARKER_NPM}}
