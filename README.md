@@ -7,7 +7,7 @@ a suitable plugin for Leaflet v2, so whipped this up.
 
 View the [demo](https://almamigratoria-netizen.github.io/Leaflet-SVGMarkers/).  Click on individual markers to see what options were applied.
 
-![Screenshot](./Screenshot.png "Screenshot")
+![Screenshot](./Screenshot.png)
 
 ## Usage
 ```js
