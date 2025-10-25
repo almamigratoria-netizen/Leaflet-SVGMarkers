@@ -4,8 +4,8 @@
 name: leaflet-svgmarkers
 
 on:
-  release: 1.0.0
-    types:[published]
+  release: v1.0.0
+  types: [published]
 
 jobs:
   build:
