@@ -18,7 +18,6 @@ jobs:
       - run: npm ci
       
   publish-npm:
-    needs: 
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
