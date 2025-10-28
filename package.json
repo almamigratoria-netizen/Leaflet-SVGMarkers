@@ -1,0 +1,46 @@
+{
+  "name": "leaflet-svgmarkers",
+  "version": "1.0.0",
+  "description": "Leaflet v2 SVG Markers styled by CSS",
+  "keywords": [
+    "Leaflet",
+    "SVG",
+    "Marker"
+  ],
+  "homepage": "https://github.com/almamigratoria-netizen/Leaflet-SVGMarkers#readme",
+  "bugs": {
+    "url": "https://github.com/almamigratoria-netizen/Leaflet-SVGMarkers/issues"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/almamigratoria-netizen/Leaflet-SVGMarkers.git"
+  },
+  "license": "MIT",
+  "author": "Alma Migratoria",
+  "type": "module",
+  "main": "dist/SVGMarkers.min.mjs",
+  "scripts": {
+    "test": "exit 1",
+    "publish": "git push && npm publish",
+    "build": "npm-run-all lint minify",
+    "minify": "terser SVGMarkers.mjs -c -m --output dist/js/SVGMarkers.min.mjs",
+    "lint": "eslint SVGMarkers.mjs"
+  },
+  "dependencies": {
+    "source-map": "^0.7.6",
+    "source-map-support": "^0.5.21"
+  },
+  "devDependencies": {
+    "@eslint/css": "^0.13.0",
+    "@eslint/js": "^9.38.0",
+    "eslint": "^9.38.0",
+    "globals": "^16.4.0",
+    "npm-run-all": "^4.1.5",
+    "terser": "^5.44.0"
+  },
+  "publishConfig": {
+    "registry": "https://npm.pkg.github.com",
+    "access": "public",
+    "name": "leaflet-svgmarkers"
+  }
+}
