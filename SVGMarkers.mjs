@@ -111,11 +111,12 @@ class SVGMarkerUtil {
     // append SVG <def>'s to the DOM so we can use them for
     // gradients and transforms etc.
     static svgExport(svg=null) {
+        svg = null;
         // PLACEHOLDER FOR NOW.
         // deserialize if necessary,
         // wrap in <svg> tag if all they gave us was a <def> or gradient
         // append to DOM
-        return null;
+        return svg;
     }
 
     // Trying to apply color, gaussian blur, rotate to get
@@ -206,10 +207,10 @@ class SVGMarkerUtil {
 
     // This is a kludge.  You really can't parse XML with regex.
     // But it'll work for our markers, and it was fun to build.
-    static kludge_svgDeserializer(svgString, options={}) {
+    static kludge_svgDeserializer(svgString) {
         // Use a stack instead of recursion.  Might refactor it later. 
         let tagStack = []; 
-        // /<(\w+)([^>]*)>.*?</\1>/   (Doesn't match self-closers)
+        // eslint-disable-next-line no-useless-escape 
         const re_tag = /<\s*(?<tagclose>[\/])?\s*(?<tag>\/?\w+)\s*(?<attribs>[^>]*)?>/g;
 
         // ideally our re_tag would detect self-closers as well.
@@ -311,6 +312,7 @@ class SVGIcon extends Icon {
                 if (typeof v === 'string' && v.trim().match(/^<svg.*>/)) {
                     v = SVGMarkerUtil.svgToDataURL(v);
                 }
+                // eslint-disable-next-line no-useless-escape
                 if (v.match(/^[\.\/]/)) { // they gave us a relative URL
                     let a = document.createElement('a');
                     a.setAttribute('href', v);
@@ -397,6 +399,7 @@ class SVGIcon extends Icon {
 
 
     createShadow(args) {
+        console.log("createShadow args = ", args);
         const shape = this.options['shape'] || 'default';
         let a = SVGIconShadows[shape].cloneNode(true);
         // Do we need to attach some attributes to this ??
