@@ -27,7 +27,7 @@ jobs:
           cache: 'npm'
 
       - name: Write .npmrc (authenticate)
-        if: secrets.NPM_TOKEN != ''
+        if: ${{secrets.NPM_TOKEN}} != ''
         run: |
           # write token to home .npmrc (showing only masked snippets later)
           printf "//registry.npmjs.org/:_authToken=%s\n" "${{ secrets.NPM_TOKEN }}" > ~/.npmrc
@@ -70,7 +70,7 @@ jobs:
           echo "is_scoped=$is_scoped" >> $GITHUB_OUTPUT
 
       - name: Registry check for package (helpful diagnostic)
-        if: steps.pkg.outputs.package_name != ''
+        if: ${{ steps.pkg.outputs.package_name }} != ''
         run: |
           pkg="${{ steps.pkg.outputs.package_name }}"
           echo "Checking registry entry for: $pkg"
