@@ -1,11 +1,11 @@
 # Leaflet-SVGMarkers
 
-Provides pure SVG markers (no more DivIcons, no unstylable dataURL's) for Leaflet v2 which you can style by CSS.  No dependacies (other than Leaflet v2).  Markers are styled by CSS and accept a modest range of options.  Surprisingly, on my laptop they render faster than standard markers, and are about 3 times as fast on my phone.  Your milage may vary.
+Provides pure SVG markers (no more DivIcons, no unstylable dataURL's) for Leaflet v2 which you can style by CSS.  No dependencies (other than Leaflet v2).  Markers are styleable by CSS and accept a modest range of options.  Surprisingly, on my laptop they render faster than standard markers, and are about 3 times as fast on my phone.  Your milage may vary.
 
 Basically I wanted colorable markers that would take glyphs and couldn't find
 a suitable plugin for Leaflet v2, so whipped this up.  
 
-View the [demo](https://almamigratoria-netizen.github.io/Leaflet-SVGMarkers/).  Click on individual markers to see what options were applied.
+View the [demo](https://almamigratoria-netizen.github.io/Leaflet-SVGMarkers/).   Click on individual markers to see what options were applied.
 
 ![Screenshot](./Screenshot.png)
 
@@ -24,6 +24,7 @@ newMarker.addTo(map);
 ```
 
 ## Options
+* All normal [Marker options](https://leafletjs.com/reference.html#marker-options) apply.
 * `shape:`: 'square' or 'penta'.  Easily extensible, just add a path to the 'extra\_paths' object.  Defaults to the familiar vanilla map pin.
 * `color:` sets the stroke and fill style attributes.  Only colors supported by CSS are accepted.
 * `stroke:` sets the stroke attribute
@@ -32,18 +33,19 @@ newMarker.addTo(map);
 * `dotRadius:` sets the radius of the dot in the marker (defaults to 5)
 * `style:` Embeds the passed string as a stylesheet in your SVGMarker 
 icon.  You probably want to use this in conjunction with `class:`
-* `glyph:` name of a glyph from a CSS you have loaded.
-* `glyphPrefix:` Defaults to the name of the glyph up to the first '-'
+* `glyph:` name of a glyph from a font you have loaded (like font-awesome).
+* `glyphPrefix:` Defaults to the name of the glyph up to the first '-' 
 * `glyphColor:` Defaults to `white`.
 * `number:` Puts a number (or other character) on the marker.  The `glyphColor` option can be used to color it. 
 * `class:` add a whitespace separated list of classes to the SVG element.
 * `image:` SVG (string) or URL.  Adds a user supplied image to the SVG.
 * `imageOpts:` attributes for the image.  Typically you should supply width and height (both default to 15, the standard Maki-icon size).  Supply x and y to center the image (although it will try to center with the information it has).  `image`s are created using the SVG `<image>` tag, so sttributes aren't exactly the same as for `Image()`, but there are plenty of [references](https://developer.mozilla.org/en-US/docs/Web/SVG/Reference/Element/image) out there.
 * Any option not understood will try to be applied to the "style" attributes, which may or may not be what you want.
-> [!NOTE]
+> [!NOTES]
 > glyphs tested with font-awesome 4.7, boxicons, bootstrap-icons 1.13.1<br/>
 > adding a glyph or number automatically reduces the dot radius to zero<br/>
 > Standard CSS specificity rules apply to SVG's.  Presentation attributes in SVG's have the lowest priority.
+* URL's for images can be canonical, relative (i.e., './images/foo.png'), or dataURL's.  SVG's passed as strings will be converted to a dataURL (which makes them hard to style).
 
 ## The SVGMarkerUtil class
 You can also import the SVGMarkerUtil class.  There are some potentially 
