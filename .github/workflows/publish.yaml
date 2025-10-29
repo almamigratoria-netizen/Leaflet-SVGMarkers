@@ -27,7 +27,7 @@ jobs:
           cache: 'npm'
 
       - name: Write .npmrc (authenticate)
-        if: ${{secrets.NPM_TOKEN}} != ''
+        if: "${{ secrets.NPM_TOKEN }}" != ''
         run: |
           # write token to home .npmrc (showing only masked snippets later)
           printf "//registry.npmjs.org/:_authToken=%s\n" "${{ secrets.NPM_TOKEN }}" > ~/.npmrc
