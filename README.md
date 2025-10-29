@@ -24,7 +24,7 @@ newMarker.addTo(map);
 ```
 
 ## Options
-* All normal [Marker options](https://leafletjs.com/reference.html#marker-options) apply.
+* All normal [Marker options](https://leafletjs.com/reference.html#marker-icon) apply.
 * `shape:`: 'square' or 'penta'.  Easily extensible, just add a path to the 'extra\_paths' object.  Defaults to the familiar vanilla map pin.
 * `color:` sets the stroke and fill style attributes.  Only colors supported by CSS are accepted.
 * `stroke:` sets the stroke attribute
