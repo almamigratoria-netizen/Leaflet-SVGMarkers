@@ -47,7 +47,7 @@ jobs:
           chmod 600 ~/.npmrc
           echo ".npmrc written to $HOME (token hidden)"
 
-      - name: Diagnostics: npm config, registry, whoami
+      - name: Diagnostics npm config, registry, whoami
         run: |
           echo "----- npm config list -----"
           npm config list -l
