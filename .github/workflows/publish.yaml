@@ -1,6 +1,6 @@
-name: Publish to npm
+name: Publish to npm (diagnostics)
+
 on:
-  # Trigger on push to main and allow manual runs
   push:
     branches:
       - main
@@ -29,30 +29,24 @@ jobs:
       - name: Write .npmrc (authenticate)
         if: secrets.NPM_TOKEN != ''
         run: |
-          echo "//registry.npmjs.org/:_authToken=${{ secrets.NPM_TOKEN }}" > ~/.npmrc
-          cat ~/.npmrc
+          # write token to home .npmrc (showing only masked snippets later)
+          printf "//registry.npmjs.org/:_authToken=%s\n" "${{ secrets.NPM_TOKEN }}" > ~/.npmrc
+          echo ".npmrc written to home"
 
-      - name: Verify npm token and whoami
+      - name: Diagnostics: npm config, registry, and whoami
         run: |
-          if ! npm whoami >/dev/null 2>&1; then
-            echo "ERROR: npm whoami failed. The provided NPM_TOKEN may be invalid or missing."
-            echo "Make sure you created an automation token on https://www.npmjs.com/ and saved it as the repository secret NPM_TOKEN."
-            npm whoami || true
-            exit 1
+          echo "----- npm config list -----"
+          npm config list -l
+          echo "registry from npm config: $(npm config get registry)"
+          echo "----- cat ~/.npmrc (token masked) -----"
+          # mask token except last 6 chars for debugging
+          if [ -f ~/.npmrc ]; then
+            awk -F= '{tok=$2; mask="***"; if(length(tok)>8){printf "%s=***%s\n",$1,substr(tok,length(tok)-5)} else {print $0}}' ~/.npmrc || cat ~/.npmrc
+          else
+            echo "~/.npmrc not present"
           fi
-          echo "Authenticated as: $(npm whoami)"
-
-      - name: Install dependencies
-        working-directory: ${{ env.PACKAGE_DIR }}
-        run: npm ci
-
-      - name: Run build (if present)
-        working-directory: ${{ env.PACKAGE_DIR }}
-        run: npm run build --if-present
-
-      - name: Run tests (if present)
-        working-directory: ${{ env.PACKAGE_DIR }}
-        run: npm test --if-present
+          echo "----- npm whoami -----"
+          npm whoami || true
 
       - name: Read package metadata
         id: pkg
@@ -67,31 +61,27 @@ jobs:
           fi
           name=$(node -pe "require(process.env.GITHUB_WORKSPACE + '/$PACKAGE_DIR/package.json').name || ''")
           is_private=$(node -pe "Boolean(require(process.env.GITHUB_WORKSPACE + '/$PACKAGE_DIR/package.json').private)")
+          echo "package_name=$name" >> $GITHUB_OUTPUT
+          echo "is_private=$is_private" >> $GITHUB_OUTPUT
           is_scoped=false
           if [ "${name#@}" != "$name" ]; then
             is_scoped=true
           fi
-          echo "package_name=$name" >> $GITHUB_OUTPUT
-          echo "is_private=$is_private" >> $GITHUB_OUTPUT
           echo "is_scoped=$is_scoped" >> $GITHUB_OUTPUT
 
-      - name: Check scope ownership (helpful diagnostics for 404)
-        if: steps.pkg.outputs.is_scoped == 'true'
+      - name: Registry check for package (helpful diagnostic)
+        if: steps.pkg.outputs.package_name != ''
         run: |
-          name="${{ steps.pkg.outputs.package_name }}"
-          scope="${name%%/*}"; scope="${scope#@}"
-          whoami=$(npm whoami)
-          echo "package scope: $scope"
-          echo "npm whoami: $whoami"
-          if [ "$whoami" != "$scope" ]; then
-            echo "ERROR: scope ownership mismatch. Publishing @${scope}/... requires the npm account or org named '${scope}'."
-            echo ""
-            echo "Possible fixes:"
-            echo " - Use an NPM_TOKEN that belongs to the '${scope}' npm user or an account with permission to publish to that scope."
-            echo " - Change package.json \"name\" to an unscoped name (e.g. \"leaflet-svgmarkers\") if you don't need the @${scope} scope."
-            echo " - Create or transfer an npm organization named '${scope}' and ensure the publishing account is a member with publish rights."
-            exit 1
-          fi
+          pkg="${{ steps.pkg.outputs.package_name }}"
+          echo "Checking registry entry for: $pkg"
+          # URL-encode scope/name for curl
+          encoded=$(python3 -c "import urllib.parse,sys; print(urllib.parse.quote(sys.argv[1], safe=''))" "$pkg")
+          echo "curl -I https://registry.npmjs.org/$encoded"
+          curl -I -s https://registry.npmjs.org/$encoded || true
+          echo "npm view (may return 404 if not published):"
+          npm view "$pkg" --registry https://registry.npmjs.org || true
+          echo "npm owner ls (if exists):"
+          npm owner ls "$pkg" --registry https://registry.npmjs.org || true
 
       - name: Show package info
         run: |
@@ -99,18 +89,25 @@ jobs:
           echo "Private: ${{ steps.pkg.outputs.is_private }}"
           echo "Scoped: ${{ steps.pkg.outputs.is_scoped }}"
 
-      - name: Publish to npm
+      - name: Install dependencies
+        working-directory: ${{ env.PACKAGE_DIR }}
+        run: npm ci
+
+      - name: Run build (if present)
+        working-directory: ${{ env.PACKAGE_DIR }}
+        run: npm run build --if-present
+
+      - name: Run tests (if present)
+        working-directory: ${{ env.PACKAGE_DIR }}
+        run: npm test --if-present
+
+      - name: Publish to npm (final attempt)
         if: ${{ steps.pkg.outputs.is_private == 'false' }}
         working-directory: ${{ env.PACKAGE_DIR }}
         run: |
-          # For scoped packages we must publish with --access public
+          pkg="${{ steps.pkg.outputs.package_name }}"
           if [ "${{ steps.pkg.outputs.is_scoped }}" = "true" ]; then
             npm publish --access public
           else
             npm publish
           fi
-
-      - name: Skip publish (private package)
-        if: ${{ steps.pkg.outputs.is_private == 'true' }}
-        run: |
-          echo "This package is marked private in package.json. Skipping publish."
