@@ -35,10 +35,8 @@ export class SVGMarker extends Marker {
 // module load so changing this changes the default icon
 const default_svgText = `
 <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 25 41" class="leaflet-zoom-animated leaflet-interactive leaflet-SVGIcon" style="width:25px">
-  <g>
     <path d="M12.4 0C5.6 0-.02 5.76-.02 12.7-.02 15.12.4501 17.28 1.6 19.2L12.4 38.4 23.2 19.2C24.4 17.38 24.9 15.12 24.88 12.72 24.88 5.8 19.2 0 12.4 0z" />
     <circle class="markerDot" cx="12.5" cy="12.5" r="5"/>
-  </g>
 </svg>
 `;
 
@@ -72,10 +70,16 @@ svg.SVGMarkerShadow {
   opacity: 0.5;
   filter: blur(3.5px);
   top: -41px; 
+  left: -12px;
 }
 .SVGMarkerShadow path {
   stroke: #666;
   fill: #666;
+}
+.SVGInvisible {
+  opacity: 0;
+  left: -10000px;
+  top: -10000px;
 }
 `;
 ////////////////////////////////////////////////////////////////////
@@ -108,15 +112,15 @@ const defaultOptions = {  // same as L.Icon
 };
 
 class SVGMarkerUtil {
-    // append SVG <def>'s to the DOM so we can use them for
-    // gradients and transforms etc.
+    // append SVG to the DOM so we can use their def's for
+    // gradients and transforms etc.  The intention is that
+    // the SVG should just contain defs, but that's on you, neighbor.
     static svgExport(svg=null) {
-        svg = null;
-        // PLACEHOLDER FOR NOW.
-        // deserialize if necessary,
-        // wrap in <svg> tag if all they gave us was a <def> or gradient
-        // append to DOM
-        return svg;
+        const fragment = SVGMarkerUtil.svgDeserialize(svg);
+        // debugger;
+        console.log(`fragment.tagName = ${fragment.tagName}`);
+        document.body.prepend(fragment);
+        return fragment;
     }
 
     // Trying to apply color, gaussian blur, rotate to get
@@ -125,32 +129,24 @@ class SVGMarkerUtil {
     // CSS transforms applied by leaflet and SVG transforms.
     static svgCreateShadow(shape, icon) {
         // console.log(`Creating shadow for ${shape}`);
-        SVGIconShadows[shape] = undefined;
-        const rpath = SVGIconsPreRotatedPaths[shape];
         let a = icon.cloneNode(true);
-        // use these two lines until we get the BBox working
-        a.setAttribute('viewBox', '0 0 31 31');
-        a.style.width = 31;
         a.querySelector('circle').remove();
-//        let b = `
-//<defs>
-//  <filter id="blurMe" width="0" height="0">
-//    <feGaussianBlur in="SourceGraphic" stdDeviation="3"></feGaussianBlur>
-//  </filter>
-//</defs>
-//`;
-//        const filter = SVGMarkerUtil.svgDeserialize(b);
-//        a.prepend(filter);
         const pathEl = a.querySelector('path');
-        pathEl.setAttribute('d', rpath);
-        // bbox apparently only works when the element is added to the DOM
-        // maybe try shadowDom?
-        //let bbox = a.getBBox();
-        //bbox = pathEl.getBBox();
-        //a.setAttribute('viewbox', `0 0 ${bbox.width} ${bbox.height}`);
-        //a.setAttribute('width', bbox.width);
-        //a.style.width = bbox.width;
-        //a.setAttribute('height', bbox.height);
+        pathEl.setAttribute('transform', 'rotate(45, 12, 41)');
+        a.classList.add('SVGInvisible');
+        document.body.prepend(a);
+        let el = document.querySelector('.SVGInvisible');
+        let elBB = el.getBBox();
+        document.body.removeChild(el);
+        a.classList.remove('SVGInvisible');
+        elBB.x = Math.round(elBB.x);
+        elBB.y = Math.round(elBB.y);
+        elBB.width = Math.round(elBB.width);
+        elBB.height = Math.ceil(elBB.height);
+        console.log("shape = ", shape);
+        console.log("elBB = ", elBB);
+        a.setAttribute('viewBox', `0 0 ${elBB.width} ${elBB.height}`);
+        a.style.width = `${elBB.width}px`;
         a.classList.add('SVGMarkerShadow');
         SVGIconShadows[shape] = a;
     }
@@ -189,7 +185,6 @@ class SVGMarkerUtil {
             const errorNode = svgDoc.querySelector("parsererror");
             if (errorNode) {
                 console.warn("DOMParser error:", JSON.stringify(errorNode));
-                return SVGElement;
             }
             SVGElement = svgDoc.documentElement;
         } catch(e) {
@@ -201,12 +196,17 @@ class SVGMarkerUtil {
         // These might generate text nodes in the final SVG.  Not needed.
         // But maybe you *want* text nodes, so we have the option.
         if (cullTextNodes) {
-            let children = Array.from(SVGElement.childNodes);
-            for (let node of children) {
-                if (node.nodeType == Node.TEXT_NODE) {
-                    SVGElement.removeChild(node);
+            function removeTextNodes(node) {
+              if (node.nodeType === 3) { // Node.TEXT_NODE
+                node.parentNode.removeChild(node);
+              } else {
+                // is there a more "modern" way to iterate the children?
+                for (let i = node.childNodes.length - 1; i >= 0; i--) {
+                  removeTextNodes(node.childNodes[i]);
                 }
+              }
             }
+            removeTextNodes(SVGElement);
         }
         return SVGElement;
     }
@@ -317,6 +317,7 @@ class SVGIcon extends Icon {
                 if (typeof v === 'string' && v.trim().match(/^<svg.*>/)) {
                     v = SVGMarkerUtil.svgToDataURL(v);
                 }
+                // does the URL start with '.' or '/' ?  Probably relative
                 // eslint-disable-next-line no-useless-escape
                 if (v.match(/^[\.\/]/)) { // they gave us a relative URL
                     let a = document.createElement('a');
@@ -407,8 +408,6 @@ class SVGIcon extends Icon {
         // console.log("createShadow args = ", args);
         const shape = this.options['shape'] || 'default';
         let a = SVGIconShadows[shape].cloneNode(true);
-        // Do we need to attach some attributes to this ??
-        // Like so we don't translate it down?
         return a; 
     }
 
@@ -427,6 +426,12 @@ export {SVGMarker as default, SVGIcon, SVGMarkerUtil};
 
 // Run on module load, not instance instantiation
 (function() {
+    const BlurFilter = `
+<svg><defs>
+<filter id="blurMe" width="0" height="0">
+  <feGaussianBlur in="SourceGraphic" stdDeviation="3"></feGaussianBlur>
+</filter>
+</defs></svg>`;
     const _writeCSS = function() {
         const sheet = new CSSStyleSheet();
         sheet.replaceSync(ourCSS);
@@ -445,5 +450,6 @@ export {SVGMarker as default, SVGIcon, SVGMarkerUtil};
     _writeCSS();    
     default_SVGIcon = SVGMarkerUtil.svgDeserialize(default_svgText, true);
     _create_shadows();
+    SVGMarkerUtil.svgExport(BlurFilter);
 })();
 
