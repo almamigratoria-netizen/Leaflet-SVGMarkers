@@ -33,7 +33,7 @@ jobs:
           printf "//registry.npmjs.org/:_authToken=%s\n" "${{ secrets.NPM_TOKEN }}" > ~/.npmrc
           echo ".npmrc written to home"
 
-      - name: Diagnostics: npm config, registry, and whoami
+      - name: Diagnostics npm config, registry, and whoami
         run: |
           echo "----- npm config list -----"
           npm config list -l
