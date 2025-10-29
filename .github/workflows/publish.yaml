@@ -100,7 +100,7 @@ jobs:
           whoami=$(npm whoami 2>/dev/null || echo "__WHOAMI_FAIL__")
           echo "Package scope: $scope"
           echo "Authenticated npm user: $whoami"
-          if [ "$whoami" = "__WHOAMI_FAIL__" ]; then
+          if [ "$whoami" == "__WHOAMI_FAIL__" ]; then
             echo "ERROR: npm whoami failed. Token invalid or registry auth issue. Ensure NPM_TOKEN is a valid automation token."
             exit 1
           fi
