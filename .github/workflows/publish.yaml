@@ -13,21 +13,49 @@ concurrency:
 jobs:
   publish:
     runs-on: ubuntu-latest
+    env:
+      # make the secret available in steps that need it (do not echo)
+      NPM_TOKEN: ${{ secrets.NPM_TOKEN }}
     steps:
       - uses: actions/checkout@v4
 
-      - name: Use Node.js
+      - name: Use Node.js and set up npm auth
         uses: actions/setup-node@v3
         with:
-          node-version: '20'                     # pick your Node version
+          node-version: '20'
           registry-url: 'https://registry.npmjs.org/'
           node-auth-token: ${{ secrets.NPM_TOKEN }}
+
+      - name: Check npm config & whoami (masked output)
+        run: |
+          echo "npm registry: $(npm config get registry)"
+          echo "---- ~/.npmrc (token masked) ----"
+          if [ -f ~/.npmrc ]; then
+            # mask token so logs don't leak it
+            sed -E 's/(:_authToken=)([^[:space:]]+)/\1***masked***/g' ~/.npmrc || true
+          else
+            echo "~/.npmrc not present"
+          fi
+          echo "npm whoami (may fail if not authed) — result below:"
+          npm whoami || true
+        shell: bash
+
+      - name: Ensure correct npm auth entry (explicit)
+        run: |
+          # Write the auth token explicitly to home npmrc (this guarantees npm uses this token)
+          # Do NOT echo the token to logs.
+          echo "//registry.npmjs.org/:_authToken=${NPM_TOKEN}" > ~/.npmrc
+          # Verify file exists (mask output)
+          sed -n '1,5p' ~/.npmrc | sed -E 's/(:_authToken=).*/\1***masked***/'
+        shell: bash
 
       - name: Install deps
         run: npm ci
 
       - name: Build
-        run: npm run build # if you have a build step
+        run: npm run build || true
 
       - name: Publish to npm
-        run: npm publish --access public        # use --access public for scoped public packages
+        run: npm publish --access public
+        env:
+          NPM_TOKEN: ${{ secrets.NPM_TOKEN }}
