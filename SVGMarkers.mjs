@@ -90,15 +90,6 @@ svg.SVGMarkerShadow {
 // gets filled in by module init code
 let default_SVGIcon = undefined;
 
-// Wanted to do this by injecting a rotate and blur filter into
-// the default and shaped icons, then save the result.  The problem
-// is they display great when I save one and open it, but don't display
-// well in the browser when constructed and cloned.  I may work on that....
-// So for now the blur is happening in CSS.  Not so bad, let's us style
-// them.
-const SVGIconsPreRotatedPaths = {
-    default: 'M27.3 3.7C22.5-1.1 14.4-1 9.5 3.9 7.8 5.6 6.6 7.5 6.1 9.6L.1 30.8 21.3 24.9C23.5 24.5 25.4 23.2 27.1 21.5 32 16.6 32.1 8.5 27.3 3.7z',
-};
 // gets populated by module init code. 
 const SVGIconShadows = {
 }
@@ -115,11 +106,13 @@ class SVGMarkerUtil {
     // append SVG to the DOM so we can use their def's for
     // gradients and transforms etc.  The intention is that
     // the SVG should just contain defs, but that's on you, neighbor.
+    // FIXME:  Should we just have one SVG for all the defs we get?
     static svgExport(svg=null) {
         const fragment = SVGMarkerUtil.svgDeserialize(svg);
-        // debugger;
-        console.log(`fragment.tagName = ${fragment.tagName}`);
-        document.body.prepend(fragment);
+        // need to see if fragment is just a filter/gradient, etc
+        // if so, wrap in a <def />.
+        // If just a def, wrap in <svg />
+        if (fragment) { document.body.prepend(fragment); }
         return fragment;
     }
 
