@@ -27,12 +27,6 @@ jobs:
           registry-url: ${{ env.REGISTRY }}
           cache: 'npm'
 
-      - name: Fail early if NPM_TOKEN secret missing
-        if: ${{ secrets.NPM_TOKEN == '' }}
-        run: |
-          echo "ERROR: NPM_TOKEN secret is not set for this repository. Add it under Settings → Secrets and variables → Actions."
-          exit 1
-
       - name: Show repo .npmrc (if any) and environment that may affect npm
         run: |
           echo "---- repo .npmrc (if present) ----"
