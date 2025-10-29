@@ -26,7 +26,7 @@
     "test": "exit 1",
     "publish": "git push && npm publish",
     "build": "npm-run-all lint minify",
-    "minify": "terser SVGMarkers.mjs -c -m --output dist/js/SVGMarkers.min.mjs",
+    "minify": "terser SVGMarkers.mjs --module -c -m --output dist/js/SVGMarkers.min.mjs",
     "lint": "eslint SVGMarkers.mjs"
   },
   "dependencies": {

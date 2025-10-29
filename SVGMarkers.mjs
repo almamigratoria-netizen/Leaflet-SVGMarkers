@@ -124,7 +124,7 @@ class SVGMarkerUtil {
     // blur, and there seems to be some strange interaction between
     // CSS transforms applied by leaflet and SVG transforms.
     static svgCreateShadow(shape, icon) {
-        console.log(`Creating shadow for ${shape}`);
+        // console.log(`Creating shadow for ${shape}`);
         SVGIconShadows[shape] = undefined;
         const rpath = SVGIconsPreRotatedPaths[shape];
         let a = icon.cloneNode(true);
@@ -173,8 +173,14 @@ class SVGMarkerUtil {
         return s;
     }
 
+    // SVG's have a large attack surface.  Sanitize your inputs.
+    // svgDeserialize attempts to use DOMParser to deserialize the strings,
+    // but falls back to a hand-rolled simple deserializer if DOMParser
+    // throws an Error (probably because of your CSP).  This simple
+    // fallback deserializer is sufficient for the provided icons, but
+    // may or may not work on SVG's with more than the basic SVG 
+    // element tags. 
     static svgDeserialize(inputSVG, cullTextNodes=true) {
-        // NOTE:  Remove next line for production
         // return SVGMarkerUtil.kludge_svgDeserializer(inputSVG);
         let SVGElement = null;
         try {
@@ -182,7 +188,7 @@ class SVGMarkerUtil {
             const svgDoc = Dp.parseFromString(inputSVG, 'image/svg+xml');
             const errorNode = svgDoc.querySelector("parsererror");
             if (errorNode) {
-                console.log("DOMParser error:", JSON.stringify(errorNode));
+                console.warn("DOMParser error:", JSON.stringify(errorNode));
                 return SVGElement;
             }
             SVGElement = svgDoc.documentElement;
@@ -192,8 +198,8 @@ class SVGMarkerUtil {
             SVGElement = SVGMarkerUtil.kludge_svgDeserializer(inputSVG);
         }
         // When passing SVG's as strings, there are usually newlines
-        // These generate text nodes in the final SVG.  Not needed.
-        // But maybe you *want* text nofrd, so we have the option.
+        // These might generate text nodes in the final SVG.  Not needed.
+        // But maybe you *want* text nodes, so we have the option.
         if (cullTextNodes) {
             let children = Array.from(SVGElement.childNodes);
             for (let node of children) {
@@ -213,8 +219,8 @@ class SVGMarkerUtil {
         // eslint-disable-next-line no-useless-escape 
         const re_tag = /<\s*(?<tagclose>[\/])?\s*(?<tag>\/?\w+)\s*(?<attribs>[^>]*)?>/g;
 
-        // ideally our re_tag would detect self-closers as well.
         const re_attrib = /((?<key>\w+)\s*=\s*(?<value>(['"])[^'"]*?\4))/g;
+        // ideally, our re_tag would detect self-closers as well.
         const re_selfClose = /\/\s*>/;
         let match = svgString.matchAll(re_tag);
         const allMatches = Array.from(match);
@@ -259,7 +265,6 @@ class SVGMarkerUtil {
 
 
 class SVGIcon extends Icon {
-
     // Build the icon from (mostly) scratch.
     _createSVGIcon(options) {
         let icon = default_SVGIcon.cloneNode(true);
@@ -268,7 +273,7 @@ class SVGIcon extends Icon {
             'glyphColor', 'glyphPrefix', 'imageOpts',
             // L.Marker options we can ignore (Marker will handle them)
             'keyboard', 'title', 'alt', 'zIndexOffset', 'opacity', 
-            'raisoOnHover', 'pane', 'shadowPane', 'bubblingPointerEvents',
+            'raiseOnHover', 'pane', 'shadowPane', 'bubblingPointerEvents',
             'autoPanOnFocus'
         ];
         for (const [key, value] of Object.entries(options)) {
@@ -399,7 +404,7 @@ class SVGIcon extends Icon {
 
 
     createShadow(args) {
-        console.log("createShadow args = ", args);
+        // console.log("createShadow args = ", args);
         const shape = this.options['shape'] || 'default';
         let a = SVGIconShadows[shape].cloneNode(true);
         // Do we need to attach some attributes to this ??
