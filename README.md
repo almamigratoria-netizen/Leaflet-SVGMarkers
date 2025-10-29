@@ -17,7 +17,7 @@ import {SVGMarker} from "./SVGMarker.js";
 const OSM = 'https://{s}.tile.osm.org/{x}/{y}/{z}.png';
 const map = new Map("mapdiv").setView([52.5,13.4], null, 13);
 new TileLayer(`${OSM}`).addTo(map);
-new SVGMarker([52.5, 13.395]);
+new SVGMarker([52.5, 13.395]).addTo(map);
 // bi-bank is from BootStrap Icons.
 const newMarker = new SVGMarker([52.5, 13.405], {color: 'black', glyph: 'bi-bank'});
 newMarker.addTo(map);
