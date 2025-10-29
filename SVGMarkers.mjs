@@ -397,8 +397,9 @@ class SVGIcon extends Icon {
     }
 
 
+
+    // eslint-disable-next-line no-unused-vars
     createShadow(args) {
-        // console.log("createShadow args = ", args);
         const shape = this.options['shape'] || 'default';
         let a = SVGIconShadows[shape].cloneNode(true);
         return a; 
