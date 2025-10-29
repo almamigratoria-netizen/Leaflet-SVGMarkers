@@ -1,130 +1,28 @@
-name: Publish to npm (diagnostic + safe publish)
+name: Publish debug - show masked token and whoami
 
 on:
-  push:
-    branches:
-      - main
   workflow_dispatch:
 
-concurrency:
-  group: publish-npm
-  cancel-in-progress: true
-
 jobs:
-  publish:
+  debug:
     runs-on: ubuntu-latest
-    env:
-      PACKAGE_DIR: '.'
-      REGISTRY: 'https://registry.npmjs.org'
     steps:
-      - name: Checkout repository
-        uses: actions/checkout@v4
-
-      - name: Use Node.js
-        uses: actions/setup-node@v4
-        with:
-          node-version: '18'
-          registry-url: ${{ env.REGISTRY }}
-          cache: 'npm'
-
-      - name: Show repo .npmrc (if any) and environment that may affect npm
+      - name: Fail if NPM_TOKEN missing
+        if: ${{ secrets.NPM_TOKEN == '' }}
         run: |
-          echo "---- repo .npmrc (if present) ----"
-          if [ -f .npmrc ]; then cat .npmrc; else echo "<no repo .npmrc>"; fi
-          echo "---- env vars that start with NPM or npm_config ----"
-          env | grep -iE '^(NPM_|npm_|npm_config_)' || true
+          echo "ERROR: NPM_TOKEN is not set as a repository secret."
+          exit 1
 
-      - name: Write token to home .npmrc (do not print token)
+      - name: Write token to ~/.npmrc (hidden)
         run: |
-          # write token to home .npmrc for npm CLI auth
           printf "//registry.npmjs.org/:_authToken=%s\n" "${{ secrets.NPM_TOKEN }}" > ~/.npmrc
           chmod 600 ~/.npmrc
-          echo ".npmrc written to $HOME (token hidden)"
+          echo ".npmrc written"
 
-      - name: Diagnostics npm config, registry, whoami
+      - name: Show masked token and registry and whoami
         run: |
-          echo "----- npm config list -----"
-          npm config list -l
           echo "registry: $(npm config get registry)"
-          echo "----- npm whoami (shows authenticated user) -----"
+          echo "masked token (last 6 chars):"
+          awk -F= '{tok=$2; gsub(/^[[:space:]]+|[[:space:]]+$/,"",tok); if(length(tok)>6){printf "%s=***%s\n",$1,substr(tok,length(tok)-5)} else {print $0}}' ~/.npmrc || true
+          echo "npm whoami:"
           npm whoami || true
-          echo "----- masked ~/.npmrc (last 6 chars shown) -----"
-          if [ -f ~/.npmrc ]; then
-            awk -F= '{tok=$2; gsub(/^[[:space:]]+|[[:space:]]+$/,"",tok); if(length(tok)>6){printf "%s=***%s\n",$1,substr(tok,length(tok)-5)} else {print $0}}' ~/.npmrc
-          else
-            echo "<no ~/.npmrc>"
-          fi
-
-      - name: Read package metadata
-        id: pkg
-        run: |
-          PACKAGE_DIR="${{ env.PACKAGE_DIR }}"
-          pkgfile="$GITHUB_WORKSPACE/$PACKAGE_DIR/package.json"
-          if [ ! -f "$pkgfile" ]; then
-            echo "package_name=" >> $GITHUB_OUTPUT
-            echo "is_private=true" >> $GITHUB_OUTPUT
-            echo "is_scoped=false" >> $GITHUB_OUTPUT
-            exit 0
-          fi
-          name=$(node -pe "require(process.env.GITHUB_WORKSPACE + '/$PACKAGE_DIR/package.json').name || ''")
-          is_private=$(node -pe "Boolean(require(process.env.GITHUB_WORKSPACE + '/$PACKAGE_DIR/package.json').private)")
-          publish_cfg=$(node -pe "JSON.stringify(require(process.env.GITHUB_WORKSPACE + '/$PACKAGE_DIR/package.json').publishConfig || {})")
-          echo "package_name=$name" >> $GITHUB_OUTPUT
-          echo "is_private=$is_private" >> $GITHUB_OUTPUT
-          echo "publish_config=$publish_cfg" >> $GITHUB_OUTPUT
-          is_scoped=false
-          if [ "${name#@}" != "$name" ]; then
-            is_scoped=true
-          fi
-          echo "is_scoped=$is_scoped" >> $GITHUB_OUTPUT
-
-      - name: Show package info
-        run: |
-          echo "Package: ${{ steps.pkg.outputs.package_name }}"
-          echo "Private: ${{ steps.pkg.outputs.is_private }}"
-          echo "Scoped: ${{ steps.pkg.outputs.is_scoped }}"
-          echo "publishConfig: ${{ steps.pkg.outputs.publish_config }}"
-
-      - name: Check scope ownership (fail with guidance if mismatch)
-        if: ${{ steps.pkg.outputs.is_scoped == 'true' }}
-        run: |
-          pkg="${{ steps.pkg.outputs.package_name }}"
-          scope="${pkg%%/*}"; scope="${scope#@}"
-          whoami=$(npm whoami 2>/dev/null || echo "__WHOAMI_FAIL__")
-          echo "Package scope: $scope"
-          echo "Authenticated npm user: $whoami"
-          if [ "$whoami" = "__WHOAMI_FAIL__" ]; then
-            echo "ERROR: npm whoami failed. Token invalid or registry auth issue. Ensure NPM_TOKEN is a valid automation token."
-            exit 1
-          fi
-          if [ "$whoami" != "$scope" ]; then
-            echo "ERROR: scope ownership mismatch. Publishing @${scope}/* requires an npm account/org named '${scope}' or membership in that org."
-            echo "Fixes:"
-            echo " - Use an NPM token from the '${scope}' npm account (or from an account that's an owner of that org)."
-            echo " - Change package.json name to an unscoped name if you don't need the scope."
-            exit 1
-          fi
-          echo "Scope ownership looks OK."
-
-      - name: Install dependencies
-        working-directory: ${{ env.PACKAGE_DIR }}
-        run: npm ci
-
-      - name: Run build (if present)
-        working-directory: ${{ env.PACKAGE_DIR }}
-        run: npm run build --if-present
-
-      - name: Run tests (if present)
-        working-directory: ${{ env.PACKAGE_DIR }}
-        run: npm test --if-present
-
-      - name: Dry-run publish (shows what would be published)
-        working-directory: ${{ env.PACKAGE_DIR }}
-        run: |
-          npm publish --dry-run --access public --registry ${{ env.REGISTRY }}
-
-      - name: Publish to npm (final)
-        if: ${{ steps.pkg.outputs.is_private == 'false' }}
-        working-directory: ${{ env.PACKAGE_DIR }}
-        run: |
-          npm publish --access public --registry ${{ env.REGISTRY }}
