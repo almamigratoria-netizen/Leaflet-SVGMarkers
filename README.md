@@ -1,6 +1,6 @@
 # Leaflet-SVGMarkers
 
-Provides pure SVG markers (no more DivIcons, no unstylable dataURL's) for Leaflet v2 which you can style by CSS.  No dependencies (other than Leaflet v2).  Markers are styleable by CSS and accept a modest range of options.  Surprisingly, on my laptop they render faster than standard markers, and are about 3 times as fast on my phone.  Your milage may vary.
+Provides pure SVG markers (no more DivIcons) for Leaflet v2 which you can style by CSS.  No dependencies (other than Leaflet v2).  Markers accept a modest range of options.  Surprisingly, on my laptop they render faster than standard markers, and are about 3 times as fast on my phone.  Your milage may vary.
 
 Basically I wanted colorable markers that would take glyphs and couldn't find
 a suitable plugin for Leaflet v2, so whipped this up.  
@@ -12,7 +12,7 @@ View the [demo](https://almamigratoria-netizen.github.io/Leaflet-SVGMarkers/).  
 ## Usage
 ```js
 import {Map, TileLayer} from 'leaflet';
-import {SVGMarker} from "./SVGMarker.js";
+import {SVGMarker} from "https://cdn.jsdelivr.net/npm/@almamigratoria/leaflet-svgmarkers/dist/js/SVGMarkers.min.mjs";
 
 const OSM = 'https://{s}.tile.osm.org/{x}/{y}/{z}.png';
 const map = new Map("mapdiv").setView([52.5,13.4], null, 13);
@@ -44,7 +44,7 @@ icon.  You probably want to use this in conjunction with `class:`
 > [!NOTES]
 > glyphs tested with font-awesome 4.7, boxicons, bootstrap-icons 1.13.1<br/>
 > adding a glyph or number automatically reduces the dot radius to zero<br/>
-> Standard CSS specificity rules apply to SVG's.  Presentation attributes in SVG's have the lowest priority, element style attribes the highest.
+> Standard CSS specificity rules apply to SVG's, too.  Presentation attributes in SVG's have the lowest priority, element style attribes the highest.<br/>
 > URL's for images can be canonical, relative (i.e., './images/foo.png'), or dataURL's.  SVG's passed as strings will be converted to a dataURL.
 
 ## The SVGMarkerUtil class
@@ -55,7 +55,8 @@ an instance of the class.
 # Installation
 Either grab the package from [github](
 https://github.com/almamigratoria-netizen/Leaflet-SVGMarkers) or 
-`npm i @almamigratoria/leaflet-svgmarkers`
+`npm i @almamigratoria/leaflet-svgmarkers` or load it from your favorite CDN in your importmap.<br/>
+`SVGMarkers: "https://cdn.jsdelivr.net/npm/@almamigratoria/leaflet-svgmarkers/dist/js/SVGMarkers.min.mjs"`
 
 ## License
 Distributed under the terms of the [MIT](https://opensource.org/license/mit) license.
