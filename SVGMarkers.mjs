@@ -3,7 +3,6 @@
 //
 // ESM for Leaflet v2 to create css styled SVG markers.
 // No DivIcons, no <img> tags, no dependencies
-// ... and so far no shadows, but I'm working on it.
 //
 // default export is the SVGMarker class.  
 // also available are SVGIcon and SVGMarkerUtil
@@ -14,6 +13,8 @@
 //
 
 // Trust the importmap, I guess
+// Do we need to check if an importmap exists 
+// and add one if necessary?
 import {Marker, Icon, LatLng, Util} from 'leaflet';
 
 export class SVGMarker extends Marker {
@@ -37,25 +38,33 @@ const default_svgText = `
 <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 25 41" class="leaflet-zoom-animated leaflet-interactive leaflet-SVGIcon" style="width:25px">
     <path d="M12.4 0C5.6 0-.02 5.76-.02 12.7-.02 15.12.4501 17.28 1.6 19.2L12.4 38.4 23.2 19.2C24.4 17.38 24.9 15.12 24.88 12.72 24.88 5.8 19.2 0 12.4 0z" />
     <circle class="markerDot" cx="12.5" cy="12.5" r="5"/>
-</svg>
-`;
+</svg> `;
 
 // Used to create the shadows
 const BlurFilter = `
-<svg xmlns="http://www.w3.org/2000/svg">
+<svg xmlns="http://www.w3.org/2000/svg" id="defsSVG">
   <defs>
     <filter id="shadowBlur">
-      <feGaussianBlur in="SourceGraphic" stdDeviation="3" />
+      <feGaussianBlur in="SourceGraphic" stdDeviation="2.5" />
     </filter>
   </defs>
 </svg>`;
+// When using this to build the filter, the resulting SVG element
+// appears to be identical to the above, but the blur doesn't blur.
+// Don't know why.  Need to work on this.
+//const BlurFilter = `
+//    <filter id="shadowBlur">
+//      <feGaussianBlur in="SourceGraphic" stdDeviation="2.5" />
+//    </filter>
+//`;
 // NOTE:  If you add a new shape, be aware that all the 'shape' option does
 //        is paste this value into the 'd' attribute of the <path> of a copy
 //        of the default icon (defined above).
-//        It does not automatically determine the bounds or set Icon options
+//        It does not (yet) determine the bounds or set Icon options
 const extra_paths = {
     square: 'M21.44 0H3.66C1.70 0 0.10 1.87 0.10 4.18V24.03 C0.10 26.33 1.70 28.2 3.66 28.2H8.11L12.54 41L17 28.2H21.45C23.41 28.2 25 26.33 25 24.02V4.18C25 1.87 23.41 0 21.45 0Z',
     penta: 'M0 14.0124 6.2456 0h12.492L24.8 14 12.4912 40.991z',
+    pin: 'M11 16.2V34a1.4 1.4 0 002.8 0V16.2a8.3 8.2 0 10-2.8 0zM15.2 27.4V34a2.8 2.7 0 01-5.5 0v-6.6c-5.7.7-9.7 3.3-9.7 6.6 0 3.9 5.3 6.8 12.4 6.8s12.4-2.9 12.4-6.8c0-3.4-4-6-9.7-6.6z',
 };
 
 const ourCSS = `
@@ -90,6 +99,9 @@ svg.SVGMarkerShadow {
   left: -10000px;
   top: -10000px;
 }
+#defsSVG {
+  display: none;
+}
 `;
 ////////////////////////////////////////////////////////////////////
 //
@@ -100,8 +112,7 @@ svg.SVGMarkerShadow {
 let default_SVGIcon = undefined;
 
 // gets populated by module init code. 
-const SVGIconShadows = {
-}
+const SVGIconShadows = { };
 
 const defaultOptions = {  // same as L.Icon
     iconSize:    [25, 41],
@@ -112,32 +123,45 @@ const defaultOptions = {  // same as L.Icon
 };
 
 class SVGMarkerUtil {
-    // append SVG to the DOM so we can use their def's for
-    // gradients and transforms etc.  The intention is that
-    // the SVG should just contain defs, but that's on you, neighbor.
-    // FIXME:  Should we just have one SVG for all the defs we get?
+    // append filters and gradients to an SVG in the DOM
     static svgExport(svg=null) {
-        const fragment = SVGMarkerUtil.svgDeserialize(svg);
-        // need to see if fragment is just a filter/gradient, etc
-        // if so, wrap in a <def />.
-        // If just a def, wrap in <svg />
-        if (fragment) { document.body.append(fragment); }
-        return fragment;
+        const _getDefsSVG = function() {
+            let defsSVG = document.querySelector('#defsSVG');
+            if (!defsSVG) {
+                const xmlNS = "http://www.w3.org/2000/svg";
+                defsSVG = SVGMarkerUtil.svgMaker('svg', {xmlns: xmlNS});
+                defsSVG.setAttribute('id', 'defsSVG');
+                document.body.appendChild(defsSVG);
+            }
+            return defsSVG;
+        }
+        let svgElems = SVGMarkerUtil.svgDeserialize(svg);
+        // wrap bare gradients/filters etc in a <defs>
+        if (! svgElems.querySelector('defs') && svgElems.tagName != 'defs') {
+            const defs = SVGMarkerUtil.svgMaker('defs');
+            defs.appendChild(svgElems);
+            svgElems = defs;
+        }
+        if (! svgElems.querySelector('svg') && svgElems.tagName != 'svg') {
+            const s = _getDefsSVG();
+            s.appendChild(svgElems);
+            svgElems = s;
+        } else {
+            document.body.append(svgElems);
+        }
     }
 
-    // Trying to apply color, gaussian blur, rotate to get
-    // a shadow of an SVG, but the browser isn't rendering the
-    // blur, and there seems to be some strange interaction between
-    // CSS transforms applied by leaflet and SVG transforms.
     static svgCreateShadow(shape, icon) {
-        // console.log(`Creating shadow for ${shape}`);
         let a = icon.cloneNode(true);
-        a.querySelector('circle').remove();
+        // don't need the circle in a shadow
+        a.querySelector('circle')?.remove();
         const pathEl = a.querySelector('path');
+        // rotate and blur
         pathEl.setAttribute('transform', 'rotate(45, 12, 41)');
         pathEl.setAttribute('filter', 'url(#shadowBlur)');
         a.classList.add('SVGInvisible');
-        document.body.prepend(a);
+        // ROADMAP: maybe try a fragment, see if that works with getBBox() 
+        document.body.append(a);
         let el = document.querySelector('.SVGInvisible');
         let elBB = el.getBBox();
         document.body.removeChild(el);
@@ -153,7 +177,6 @@ class SVGMarkerUtil {
     }
 
     static serializeSVG(svgElement) {
-        // check if arg === element.  Could also allow selectors?
         const serializer = new XMLSerializer();
         const svgString = serializer.serializeToString(svgElement);
         return svgString;
@@ -171,6 +194,7 @@ class SVGMarkerUtil {
     }
 
     // SVG's have a large attack surface.  Sanitize your inputs.
+    // No.  Really.  Sanitize your inputs.
     static svgDeserialize(inputSVG, cullTextNodes=true) {
         // return SVGMarkerUtil.kludge_svgDeserializer(inputSVG);
         let SVGElement = null;
@@ -187,17 +211,17 @@ class SVGMarkerUtil {
             console.warn("You might want to pass TrustedHTML");
             SVGElement = SVGMarkerUtil.kludge_svgDeserializer(inputSVG);
         }
-        // When passing SVG's as strings, there are usually newlines
+        // When passing SVG's as strings, there are usually newlines.
         // These might generate text nodes in the final SVG.  Not needed.
         // But maybe you *want* text nodes, so we have the option.
         if (cullTextNodes) {
+            // for some reason, this only works sometimes :-(
             function removeTextNodes(node) {
               if (node.nodeType === 3) { // Node.TEXT_NODE
-                node.parentNode.removeChild(node);
-              } else {
-                // is there a more "modern" way to iterate the children?
-                for (let i = node.childNodes.length - 1; i >= 0; i--) {
-                  removeTextNodes(node.childNodes[i]);
+                node.remove();
+              } else { 
+                for (let child of node.childNodes) {
+                  removeTextNodes(child);
                 }
               }
             }
@@ -261,9 +285,10 @@ class SVGMarkerUtil {
 
 class SVGIcon extends Icon {
     // Build the icon from (mostly) scratch.
+    // You are responsible for sanitizing your options 
     _createSVGIcon(options) {
         let icon = default_SVGIcon.cloneNode(true);
-        let ignore_these_keys = [
+        const ignore_these_keys = [
             // Our own options 
             'glyphColor', 'glyphPrefix', 'imageOpts',
             // L.Marker options we can ignore (Marker will handle them)
@@ -280,6 +305,10 @@ class SVGIcon extends Icon {
                     p.setAttribute('d', extra_paths[value]);
                 } else {
                     console.warn(`unknown shape: ${value}`);
+                }
+                if (value == 'pin') {
+                    let c = icon.querySelector('circle');
+                    c.setAttribute('cy', 8);
                 }
             } else if (key == 'color') { 
                 if (CSS.supports('color', value)) {
@@ -301,13 +330,17 @@ class SVGIcon extends Icon {
                 }
             } else if (key == 'dotColor') { 
                 if (CSS.supports('color', value)) {
-                    let el = icon.querySelector('.markerDot');
-                    if (el) el.style.fill = value;
+                    const q = icon.querySelector('.markerDot');
+                    if (q) { q.style.fill = value; }
                 } else { console.warn(`color ${value} not supported`); }
             } else if (key == 'dotRadius') { 
                 icon.querySelector('.markerDot')?.setAttribute('r', value);
             } else if (key == 'image') {
                 let v = value;
+                if (v.startsWith('javascript')) {
+                    console.warn("Bad image option %o", value);
+                    continue;
+                }
                 // did they give us an svg string?
                 if (typeof v === 'string' && v.trim().match(/^<svg.*>/)) {
                     v = SVGMarkerUtil.svgToDataURL(v);
@@ -338,7 +371,6 @@ class SVGIcon extends Icon {
                 let el = SVGMarkerUtil.svgMaker('image', imgOpts);
                 // ROADMAP: Could probably do an Image(), set href, then 
                 // try to get native size in an onload handler
-
                 icon.appendChild(el);
                 el = icon.querySelector('.markerDot');
                 if (el) el.setAttribute('r', 0);
@@ -373,6 +405,7 @@ class SVGIcon extends Icon {
                 style.append(value);
                 icon.prepend(style);
             } else {
+                // Don't recognize option.
                 for (const child of icon.children) {
                     child.style[key] = value;
                 }
@@ -398,8 +431,6 @@ class SVGIcon extends Icon {
         return icon;
     }
 
-
-
     // eslint-disable-next-line no-unused-vars
     createShadow(args) {
         const shape = this.options['shape'] || 'default';
@@ -423,6 +454,7 @@ export {SVGMarker as default, SVGIcon, SVGMarkerUtil};
 // Run on module load, not instance instantiation
 (function() {
 
+    // This should work on any evergreen browser.
     const _writeCSS = function() {
         const sheet = new CSSStyleSheet();
         sheet.replaceSync(ourCSS);
