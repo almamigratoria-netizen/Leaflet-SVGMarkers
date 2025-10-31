@@ -1,4 +1,4 @@
-name: Publish to npm (diagnostic + safe publish)
+name: Publish to npm
 
 on:
   push:
@@ -35,6 +35,14 @@ jobs:
 
       - name: Explicitly set registry
         run: npm config set registry https://registry.npmjs.org
+
+      - name: Diagnostics npm config registry and whoami
+        run: |
+          echo -n "Last six of auth: "
+          tail -c 6 .npmrc
+
+      - name: Get registry
+        run: npm config get registry
 
       - name: Check npm whoami
         run: npm whoami || true
