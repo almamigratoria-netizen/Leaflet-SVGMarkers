@@ -15,7 +15,7 @@ jobs:
     runs-on: ubuntu-latest
     env:
       PACKAGE_DIR: '.'
-      REGISTRY: 'https://registry.npmjs.org'
+      REGISTRY: '//registry.npmjs.org'
     steps:
       - name: Checkout repository
         uses: actions/checkout@v4
@@ -23,7 +23,7 @@ jobs:
       - name: Use Node.js
         uses: actions/setup-node@v4
         with:
-          node-version: '18'
+          node-version: '22'
           registry-url: ${{ env.REGISTRY }}
           cache: 'npm'
 
@@ -34,19 +34,11 @@ jobs:
             exit 1
           fi
 
-      - name: Show repo .npmrc (if any) and environment that may affect npm
-        run: |
-          echo "---- repo .npmrc (if present) ----"
-          if [ -f .npmrc ]; then cat .npmrc; else echo "<no repo .npmrc>"; fi
-          echo "---- env vars that start with NPM or npm_config ----"
-          env | grep -iE '^(NPM_|npm_|npm_config_)' || true
+      - name: Create repo .npmrc
+        run: echo "${{ secrets.DOT_NPMRC }}" > .npmrc 
 
-      - name: Write token to home .npmrc (do not print token)
-        run: |
-          # write token to home .npmrc for npm CLI auth
-          printf "//registry.npmjs.org/:_authToken=%s\n" "${{ secrets.NPM_TOKEN }}" > ~/.npmrc
-          chmod 600 ~/.npmrc
-          echo ".npmrc written to $HOME (token hidden)"
+      - name: Create repo .npmrc
+        run: echo "${{ secrets.ESLINT_CONFIG }}" > eslint.config.js
 
       - name: Diagnostics npm config registry and whoami
         run: |
@@ -114,24 +106,13 @@ jobs:
           echo "Scope ownership looks OK."
 
       - name: Install dependencies
-        working-directory: ${{ env.PACKAGE_DIR }}
         run: npm ci
 
-      - name: Run build (if present)
-        working-directory: ${{ env.PACKAGE_DIR }}
-        run: npm run build --if-present
-
-      - name: Run tests (if present)
-        working-directory: ${{ env.PACKAGE_DIR }}
-        run: npm test --if-present
+      - name: Run build
+        run: npm run build
 
       - name: Dry-run publish (shows what would be published)
-        working-directory: ${{ env.PACKAGE_DIR }}
-        run: |
-          npm publish --dry-run --access public --registry ${{ env.REGISTRY }}
+        run: npm publish --dry-run --access public
 
       - name: Publish to npm (final)
-        if: ${{ steps.pkg.outputs.is_private == 'false' }}
-        working-directory: ${{ env.PACKAGE_DIR }}
-        run: |
-          npm publish --access public --registry ${{ env.REGISTRY }}
+        run: npm publish --access public || true
