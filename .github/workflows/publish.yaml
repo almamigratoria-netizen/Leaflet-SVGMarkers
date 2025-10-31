@@ -64,14 +64,14 @@ jobs:
           echo '    plugins: { js },' >> ${ec} 
           echo '    extends: ["js/recommended"],' >> ${ec} 
           echo '    languageOptions: { globals: globals.browser }' >> ${ec} 
-          echo '  },' > ${ec}
-          echo '  { ' > ${ec} 
-          echo '    files: ["**/*.css"],' > ${ec} 
-          echo '    plugins: { css },' > ${ec} 
-          echo '    language: "css/css",' > ${ec} 
-          echo '    extends: ["css/recommended"]' > ${ec} 
-          echo '  },' > ${ec}
-          echo ']);' > ${ec}
+          echo '  },' >> ${ec}
+          echo '  { ' >> ${ec} 
+          echo '    files: ["**/*.css"],' >> ${ec} 
+          echo '    plugins: { css },' >> ${ec} 
+          echo '    language: "css/css",' >> ${ec} 
+          echo '    extends: ["css/recommended"]' >> ${ec} 
+          echo '  },' >> ${ec}
+          echo ']);' >> ${ec}
 
       - name: Verify eslint config
         run: cat eslint.config.js
