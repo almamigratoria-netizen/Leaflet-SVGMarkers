@@ -53,25 +53,25 @@ jobs:
       - name: Create eslint config
         shell: bash
         run: |
-          EC = 'eslint.config.js'
-          echo 'import js from "@eslint/js";' > ${EC}
-          echo 'import globals from "globals";' >> ${EC}
-          echo 'import css from "@eslint/css";' >> ${EC}
-          echo 'import { defineConfig } from "eslint/config";' >> ${EC}
-          echo 'export default defineConfig([' >> ${EC}
-          echo '  { ' >> ${EC} 
-          echo '    files: ["**/*.{js,mjs,cjs}"],' >> ${EC} 
-          echo '    plugins: { js },' >> ${EC} 
-          echo '    extends: ["js/recommended"],' >> ${EC} 
-          echo '    languageOptions: { globals: globals.browser }' >> ${EC} 
-          echo '  },' > ${EC}
-          echo '  { ' > ${EC} 
-          echo '    files: ["**/*.css"],' > ${EC} 
-          echo '    plugins: { css },' > ${EC} 
-          echo '    language: "css/css",' > ${EC} 
-          echo '    extends: ["css/recommended"]' > ${EC} 
-          echo '  },' > ${EC}
-          echo ']);' > ${EC}
+          ec='eslint.config.js'
+          echo 'import js from "@eslint/js";' > ${ec}
+          echo 'import globals from "globals";' >> ${ec}
+          echo 'import css from "@eslint/css";' >> ${ec}
+          echo 'import { defineConfig } from "eslint/config";' >> ${ec}
+          echo 'export default defineConfig([' >> ${ec}
+          echo '  { ' >> ${ec} 
+          echo '    files: ["**/*.{js,mjs,cjs}"],' >> ${ec} 
+          echo '    plugins: { js },' >> ${ec} 
+          echo '    extends: ["js/recommended"],' >> ${ec} 
+          echo '    languageOptions: { globals: globals.browser }' >> ${ec} 
+          echo '  },' > ${ec}
+          echo '  { ' > ${ec} 
+          echo '    files: ["**/*.css"],' > ${ec} 
+          echo '    plugins: { css },' > ${ec} 
+          echo '    language: "css/css",' > ${ec} 
+          echo '    extends: ["css/recommended"]' > ${ec} 
+          echo '  },' > ${ec}
+          echo ']);' > ${ec}
 
       - name: Verify eslint config
         run: cat eslint.config.js
