@@ -79,16 +79,16 @@ jobs:
         shell: bash
         run: |
           echo ".git*" > .npmignore
+          echo ".npm*" >> .npmignore
           echo "*.swp" >> .npmignore
           echo "*.url" >> .npmignore
-          echo "test*" >> .npmignore
-          echo ".npmrc" >> .npmignore
           echo "*.png" >> .npmignore
+          echo "*.svg" >> .npmignore
+          echo "test*" >> .npmignore
           echo "/node_modules" >> .npmignore
           echo "package-lock.json" >> .npmignore
           echo "eslint.config.js" >> .npmignore
           echo "index.html" >> .npmignore
-          echo "*.svg" >> .npmignore
 
       - name: Verify .npmignore
         run: cat .npmignore
