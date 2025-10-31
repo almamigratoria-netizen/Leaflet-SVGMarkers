@@ -52,7 +52,7 @@ jobs:
 
       - name: Create eslint config
         run: |
-          EC = "eslint.config.js"
+          let EC = "eslint.config.js"
           echo 'import js from "@eslint/js";' > ${EC}
           echo 'import globals from "globals";' >> ${EC}
           echo 'import css from "@eslint/css";' >> ${EC}
