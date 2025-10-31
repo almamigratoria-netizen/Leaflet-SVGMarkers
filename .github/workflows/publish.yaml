@@ -36,14 +36,6 @@ jobs:
       - name: Explicitly set registry
         run: npm config set registry https://registry.npmjs.org
 
-      - name: Diagnostics .npmrc
-        run: |
-          echo -n "Last six of auth: "
-          tail -c 6 .npmrc
-
-      - name: Get registry
-        run: npm config get registry
-
       - name: Check npm whoami
         run: npm whoami || true
 
@@ -73,22 +65,33 @@ jobs:
           echo '  },' >> ${ec}
           echo ']);' >> ${ec}
 
-      - name: Verify eslint config
-        run: cat eslint.config.js
-
       - name: Run build
         run: npm run build
 
-      - name: Double-check npm whoami
-        run: npm whoami || true
-
-      - name: Diagnostics npm config registry and whoami
+      - name: Check npm whoami
         run: |
+          npm config get registry
           echo -n "Last six of auth: "
           tail -c 6 .npmrc
+          npm whoami || true
 
-      - name: Dry-run publish (shows what would be published)
-        run: npm publish --dry-run --access public
+      - name: Create .npmignore
+        shell: bash
+        run: |
+          echo ".git*" > .npmignore
+          echo "*.swp" >> .npmignore
+          echo "*.url" >> .npmignore
+          echo "test*" >> .npmignore
+          echo ".npmrc" >> .npmignore
+          echo "*.png" >> .npmignore
+          echo "/node_modules" >> .npmignore
+          echo "package-lock.json" >> .npmignore
+          echo "eslint.config.js" >> .npmignore
+          echo "index.html" >> .npmignore
+          echo "*.svg" >> .npmignore
 
-      - name: Publish to npm (final)
-        run: npm publish --access public || true
+      - name: Verify .npmignore
+        run: cat .npmignore
+
+      - name: Publish to npm
+        run: echo "npm publish --access public || true"
