@@ -40,9 +40,19 @@ const default_svgText = `
 </svg>
 `;
 
+// Used to create the shadows
+const BlurFilter = `
+<svg xmlns="http://www.w3.org/2000/svg">
+  <defs>
+    <filter id="shadowBlur">
+      <feGaussianBlur in="SourceGraphic" stdDeviation="3" />
+    </filter>
+  </defs>
+</svg>`;
 // NOTE:  If you add a new shape, be aware that all the 'shape' option does
 //        is paste this value into the 'd' attribute of the <path> of a copy
 //        of the default icon (defined above).
+//        It does not automatically determine the bounds or set Icon options
 const extra_paths = {
     square: 'M21.44 0H3.66C1.70 0 0.10 1.87 0.10 4.18V24.03 C0.10 26.33 1.70 28.2 3.66 28.2H8.11L12.54 41L17 28.2H21.45C23.41 28.2 25 26.33 25 24.02V4.18C25 1.87 23.41 0 21.45 0Z',
     penta: 'M0 14.0124 6.2456 0h12.492L24.8 14 12.4912 40.991z',
@@ -67,8 +77,7 @@ span.SVGIconGlyph {
   display: inline-block;
 }
 svg.SVGMarkerShadow {
-  opacity: 0.5;
-  filter: blur(3.5px);
+  opacity: 0.7;
   top: -41px; 
   left: -12px;
 }
@@ -112,7 +121,7 @@ class SVGMarkerUtil {
         // need to see if fragment is just a filter/gradient, etc
         // if so, wrap in a <def />.
         // If just a def, wrap in <svg />
-        if (fragment) { document.body.prepend(fragment); }
+        if (fragment) { document.body.append(fragment); }
         return fragment;
     }
 
@@ -126,6 +135,7 @@ class SVGMarkerUtil {
         a.querySelector('circle').remove();
         const pathEl = a.querySelector('path');
         pathEl.setAttribute('transform', 'rotate(45, 12, 41)');
+        pathEl.setAttribute('filter', 'url(#shadowBlur)');
         a.classList.add('SVGInvisible');
         document.body.prepend(a);
         let el = document.querySelector('.SVGInvisible');
@@ -136,8 +146,6 @@ class SVGMarkerUtil {
         elBB.y = Math.round(elBB.y);
         elBB.width = Math.round(elBB.width);
         elBB.height = Math.ceil(elBB.height);
-        console.log("shape = ", shape);
-        console.log("elBB = ", elBB);
         a.setAttribute('viewBox', `0 0 ${elBB.width} ${elBB.height}`);
         a.style.width = `${elBB.width}px`;
         a.classList.add('SVGMarkerShadow');
@@ -163,12 +171,6 @@ class SVGMarkerUtil {
     }
 
     // SVG's have a large attack surface.  Sanitize your inputs.
-    // svgDeserialize attempts to use DOMParser to deserialize the strings,
-    // but falls back to a hand-rolled simple deserializer if DOMParser
-    // throws an Error (probably because of your CSP).  This simple
-    // fallback deserializer is sufficient for the provided icons, but
-    // may or may not work on SVG's with more than the basic SVG 
-    // element tags. 
     static svgDeserialize(inputSVG, cullTextNodes=true) {
         // return SVGMarkerUtil.kludge_svgDeserializer(inputSVG);
         let SVGElement = null;
@@ -230,7 +232,7 @@ class SVGMarkerUtil {
             }
             let el = SVGMarkerUtil.svgMaker(tag, attrs);
             if (match[0].match(re_selfClose) || tagclose) {
-                // tag closed.  Append to parent.
+                // tag closed so append to parent.
                 tagStack.at(-1).appendChild(el);
                 if (tagStack.length > 1) {  // dont pop the bottom tag
                     tagStack.pop();
@@ -420,12 +422,7 @@ export {SVGMarker as default, SVGIcon, SVGMarkerUtil};
 
 // Run on module load, not instance instantiation
 (function() {
-    const BlurFilter = `
-<svg><defs>
-<filter id="blurMe" width="0" height="0">
-  <feGaussianBlur in="SourceGraphic" stdDeviation="3"></feGaussianBlur>
-</filter>
-</defs></svg>`;
+
     const _writeCSS = function() {
         const sheet = new CSSStyleSheet();
         sheet.replaceSync(ourCSS);
@@ -443,7 +440,7 @@ export {SVGMarker as default, SVGIcon, SVGMarkerUtil};
 
     _writeCSS();    
     default_SVGIcon = SVGMarkerUtil.svgDeserialize(default_svgText, true);
-    _create_shadows();
     SVGMarkerUtil.svgExport(BlurFilter);
+    _create_shadows();
 })();
 
