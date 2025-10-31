@@ -45,6 +45,9 @@ jobs:
       - name: Create eslint config
         run: echo "${{ secrets.ESLINT_CONFIG }}" > eslint.config.js
 
+      - name: Verify eslint config
+        run: cat eslint.config.js
+
       - name: Run build
         run: npm run build
 
