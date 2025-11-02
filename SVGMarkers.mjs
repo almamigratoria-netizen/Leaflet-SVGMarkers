@@ -109,7 +109,7 @@ svg.SVGMarkerShadow {
 //
 /////////////////////////////////////////////////////////////////////
 // gets filled in by module init code
-let default_SVGIcon = undefined;
+let default_SVGIcon;  // = undefined
 
 // gets populated by module init code. 
 const SVGIconShadows = { };
@@ -134,7 +134,7 @@ class SVGMarkerUtil {
                 document.body.appendChild(defsSVG);
             }
             return defsSVG;
-        }
+        };
         let svgElems = SVGMarkerUtil.svgDeserialize(svg);
         // wrap bare gradients/filters etc in a <defs>
         if (! svgElems.querySelector('defs') && svgElems.tagName != 'defs') {
@@ -216,7 +216,7 @@ class SVGMarkerUtil {
         // But maybe you *want* text nodes, so we have the option.
         if (cullTextNodes) {
             // for some reason, this only works sometimes :-(
-            function removeTextNodes(node) {
+            const removeTextNodes = function (node) {
               if (node.nodeType === 3) { // Node.TEXT_NODE
                 node.remove();
               } else { 
@@ -224,7 +224,7 @@ class SVGMarkerUtil {
                   removeTextNodes(child);
                 }
               }
-            }
+            };
             removeTextNodes(SVGElement);
         }
         return SVGElement;
@@ -235,7 +235,6 @@ class SVGMarkerUtil {
     static kludge_svgDeserializer(svgString) {
         // Use a stack instead of recursion.  Might refactor it later. 
         let tagStack = []; 
-        // eslint-disable-next-line no-useless-escape 
         const re_tag = /<\s*(?<tagclose>[\/])?\s*(?<tag>\/?\w+)\s*(?<attribs>[^>]*)?>/g;
 
         const re_attrib = /((?<key>\w+)\s*=\s*(?<value>(['"])[^'"]*?\4))/g;
@@ -346,7 +345,6 @@ class SVGIcon extends Icon {
                     v = SVGMarkerUtil.svgToDataURL(v);
                 }
                 // does the URL start with '.' or '/' ?  Probably relative
-                // eslint-disable-next-line no-useless-escape
                 if (v.match(/^[\.\/]/)) { // they gave us a relative URL
                     let a = document.createElement('a');
                     a.setAttribute('href', v);
@@ -358,10 +356,10 @@ class SVGIcon extends Icon {
                     console.warn("Bad image option %o", value);
                     continue;
                 }
-                let imgOpts = options['imageOpts'] || {};
+                let imgOpts = options.imageOpts || {};
                 imgOpts.href = v;
-                if (!imgOpts.width) {imgOpts.width = 15}
-                if (!imgOpts.height) {imgOpts.height = 15}
+                if (!imgOpts.width) { imgOpts.width = 15; }
+                if (!imgOpts.height) {imgOpts.height = 15;}
                 if (imgOpts.width && !imgOpts.x) {
                     imgOpts.x = (25 - imgOpts.width)/2;
                 }
@@ -431,9 +429,8 @@ class SVGIcon extends Icon {
         return icon;
     }
 
-    // eslint-disable-next-line no-unused-vars
     createShadow(args) {
-        const shape = this.options['shape'] || 'default';
+        const shape = this.options.shape || 'default';
         let a = SVGIconShadows[shape].cloneNode(true);
         return a; 
     }
@@ -444,7 +441,7 @@ class SVGIcon extends Icon {
         }
         this.name = SVGIcon;
         this._options = options;
-        this.options = {...defaultOptions, ...options}
+        this.options = {...defaultOptions, ...options};
     }
 }
 
@@ -459,7 +456,7 @@ export {SVGMarker as default, SVGIcon, SVGMarkerUtil};
         const sheet = new CSSStyleSheet();
         sheet.replaceSync(ourCSS);
         document.adoptedStyleSheets.push(sheet);
-    }
+    };
 
     const _create_shadows = function() {
         const icon = default_SVGIcon.cloneNode(true);
@@ -468,7 +465,7 @@ export {SVGMarker as default, SVGIcon, SVGMarkerUtil};
             icon.querySelector('path').setAttribute('d', path);
             SVGMarkerUtil.svgCreateShadow(shape, icon);
         }
-    }
+    };
 
     _writeCSS();    
     default_SVGIcon = SVGMarkerUtil.svgDeserialize(default_svgText, true);
