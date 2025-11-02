@@ -5,7 +5,7 @@ Provides pure SVG markers (no more DivIcons) for Leaflet v2 which you can style 
 Basically I wanted colorable markers that would take glyphs and couldn't find
 a suitable plugin for Leaflet v2, so whipped this up.  
 
-View the [demo](https://almamigratoria-netizen.github.io/Leaflet-SVGMarkers/).   Click on individual markers to see what options were applied.
+View the [demo](https://almamigratoria-netizen.github.io/Leaflet-SVGMarkers/examples/).   Click on individual markers to see what options were applied.
 
 ![Screenshot](./Screenshot.png)
 
