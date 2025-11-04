@@ -13,8 +13,6 @@
 //
 
 // Trust the importmap, I guess
-// Do we need to check if an importmap exists 
-// and add one if necessary?
 import {Marker, Icon, LatLng, Util} from 'leaflet';
 
 export class SVGMarker extends Marker {
@@ -33,7 +31,7 @@ export class SVGMarker extends Marker {
 //////////////////////////////////////////////////////////////////////
 //
 // This gets deserialized (turned from text into an SVGSVGElement) on 
-// module load so changing this changes the default icon
+// module load, so changing this changes the default icon
 const default_svgText = `
 <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 25 41" class="leaflet-zoom-animated leaflet-interactive leaflet-SVGIcon" style="width:25px">
     <path d="M12.4 0C5.6 0-.02 5.76-.02 12.7-.02 15.12.4501 17.28 1.6 19.2L12.4 38.4 23.2 19.2C24.4 17.38 24.9 15.12 24.88 12.72 24.88 5.8 19.2 0 12.4 0z" />
@@ -49,14 +47,7 @@ const BlurFilter = `
     </filter>
   </defs>
 </svg>`;
-// When using this to build the filter, the resulting SVG element
-// appears to be identical to the above, but the blur doesn't blur.
-// Don't know why.  Need to work on this.
-//const BlurFilter = `
-//    <filter id="shadowBlur">
-//      <feGaussianBlur in="SourceGraphic" stdDeviation="2.5" />
-//    </filter>
-//`;
+
 // NOTE:  If you add a new shape, be aware that all the 'shape' option does
 //        is paste this value into the 'd' attribute of the <path> of a copy
 //        of the default icon (defined above).
@@ -73,7 +64,6 @@ const ourCSS = `
   stroke: blue;
   width: 25px;
   height: 41px;
-  /* filter: drop-shadow(5px -5px 5px rgba(0, 0, 0, 0.6)); */
 }
 .leaflet-SVGIcon .markerDot {
   fill:white;
@@ -114,7 +104,7 @@ let default_SVGIcon;  // = undefined
 // gets populated by module init code. 
 const SVGIconShadows = { };
 
-const defaultOptions = {  // same as L.Icon
+const defaultOptions = {  // same options as L.Icon
     iconSize:    [25, 41],
     iconAnchor:  [12, 41],
     popupAnchor: [1, -34],
@@ -166,8 +156,6 @@ class SVGMarkerUtil {
         let elBB = el.getBBox();
         document.body.removeChild(el);
         a.classList.remove('SVGInvisible');
-        elBB.x = Math.round(elBB.x);
-        elBB.y = Math.round(elBB.y);
         elBB.width = Math.round(elBB.width);
         elBB.height = Math.ceil(elBB.height);
         a.setAttribute('viewBox', `0 0 ${elBB.width} ${elBB.height}`);
@@ -183,7 +171,7 @@ class SVGMarkerUtil {
     }
 
     // Create a dataURL from an SVG for use as img.src (not unicode safe!)
-    // We no longer use this. SVG's in <img>'s can be styled
+    // We no longer use this. SVG's in <img>'s can't be easily styled
     static svgToDataURL(inputSVG) {
         if (inputSVG instanceof SVGSVGElement) {
             inputSVG = SVGMarkerUtil.serializeSVG(inputSVG);
@@ -212,7 +200,8 @@ class SVGMarkerUtil {
             SVGElement = SVGMarkerUtil.kludge_svgDeserializer(inputSVG);
         }
         // When passing SVG's as strings, there are usually newlines.
-        // These might generate text nodes in the final SVG.  Not needed.
+        // These might generate text nodes in the final SVG.
+        // They do little harm, but are not needed.
         // But maybe you *want* text nodes, so we have the option.
         if (cullTextNodes) {
             // for some reason, this only works sometimes :-(
@@ -232,6 +221,8 @@ class SVGMarkerUtil {
 
     // This is a kludge.  You really can't parse XML with regex.
     // But it'll work for our markers, and it was fun to build.
+    // This fallback exists (mostly) for internal use in restrictive
+    // CSP environments.
     static kludge_svgDeserializer(svgString) {
         // Use a stack instead of recursion.  Might refactor it later. 
         let tagStack = []; 
@@ -269,18 +260,19 @@ class SVGMarkerUtil {
     }
 
     // Creates and returns a tag in the SVG namespace with
-    // attributes set according to the passed object
-    static svgMaker(tag, attrs) {
+    // attributes set according to the passed attrs object
+    static svgMaker( tag, attrs={} ) {
         if (tag.startsWith("/")) { return null; }
         const svgNS = "http://www.w3.org/2000/svg";
         const el = document.createElementNS(svgNS, tag);
+        // in case they don't supply it
+        if (tag == 'svg') { attr.xmlns = svgNS; }
         for (const key in attrs) {
             el.setAttribute(key, attrs[key]);
         }
         return el;
     }
 }
-
 
 class SVGIcon extends Icon {
     // Build the icon from (mostly) scratch.
@@ -290,13 +282,13 @@ class SVGIcon extends Icon {
         const ignore_these_keys = [
             // Our own options 
             'glyphColor', 'glyphPrefix', 'imageOpts',
-            // L.Marker options we can ignore (Marker will handle them)
+            // L.Marker options we can ignore (L.Marker will handle them)
             'keyboard', 'title', 'alt', 'zIndexOffset', 'opacity', 
             'raiseOnHover', 'pane', 'shadowPane', 'bubblingPointerEvents',
-            'autoPanOnFocus'
+            'autoPanOnFocus',
         ];
         for (const [key, value] of Object.entries(options)) {
-            // These keys handled by another key's handler
+            // These keys are handled by another key's handler
             if (ignore_these_keys.includes(key)) { continue; }
             if (key == 'shape') {
                 if (value in extra_paths) {
@@ -358,8 +350,8 @@ class SVGIcon extends Icon {
                 }
                 let imgOpts = options.imageOpts || {};
                 imgOpts.href = v;
-                if (!imgOpts.width) { imgOpts.width = 15; }
-                if (!imgOpts.height) {imgOpts.height = 15;}
+                if (!imgOpts.width)  { imgOpts.width = 15;  }
+                if (!imgOpts.height) { imgOpts.height = 15; }
                 if (imgOpts.width && !imgOpts.x) {
                     imgOpts.x = (25 - imgOpts.width)/2;
                 }
@@ -429,7 +421,9 @@ class SVGIcon extends Icon {
         return icon;
     }
 
+    // over-rides L.Icon.createShadow();
     createShadow(args) {
+        // shouldn't need to verify shape exists
         const shape = this.options.shape || 'default';
         let a = SVGIconShadows[shape].cloneNode(true);
         return a; 
@@ -445,10 +439,10 @@ class SVGIcon extends Icon {
     }
 }
 
-
 export {SVGMarker as default, SVGIcon, SVGMarkerUtil};
 
-// Run on module load, not instance instantiation
+
+// Runs on module load, not instance instantiation
 (function() {
 
     // This should work on any evergreen browser.
