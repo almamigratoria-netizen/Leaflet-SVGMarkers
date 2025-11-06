@@ -366,6 +366,7 @@ class SVGIcon extends Icon {
                 if (el) el.setAttribute('r', 0);
             } else if (key == 'glyph' || key == 'number') {
                 let i = document.createElement('span');
+                // FIXME: is it easier to do <text> ??
                 // basic build
                 if (key == 'glyph') {
                     const pre = options.glyphPrefix || value.split('-')[0];
