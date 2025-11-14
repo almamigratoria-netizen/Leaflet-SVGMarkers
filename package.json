@@ -1,6 +1,6 @@
 {
   "name": "@almamigratoria/leaflet-svgmarkers",
-  "version": "1.0.2",
+  "version": "1.0.3",
   "description": "Leaflet v2 SVG Markers styled by CSS",
   "keywords": [
     "Leaflet",
@@ -20,10 +20,9 @@
   "type": "module",
   "main": "dist/SVGMarkers.min.mjs",
   "scripts": {
-    "audit-fix": "npm audit -fix",
-    "build": "npm-run-all audit-fix lint minify",
-    "minify": "terser SVGMarkers.mjs --module -c -m --output dist/js/SVGMarkers.min.mjs",
-    "lint": "node_modules/.bin/jshint SVGMarkers.mjs"
+    "build": "npm-run-all lint minify",
+    "lint": "jshint SVGMarkers.mjs",
+    "minify": "terser SVGMarkers.mjs --module -c -m --output dist/js/SVGMarkers.min.mjs"
   },
   "devDependencies": {
     "jshint": "^2.13.6",
