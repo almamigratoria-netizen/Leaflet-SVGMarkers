@@ -41,10 +41,10 @@ icon.  You probably want to use this in conjunction with `class:`
 * `image:` SVG (string) or URL.  Adds a user supplied image to the SVG.
 * `imageOpts:` attributes for the image.  Typically you should supply width and height (both default to 15).  Supply x and y to center the image (although it will try to center with the information it has).  `image`s are created using the SVG `<image>` tag, so sttributes aren't exactly the same as for `Image()`.
 * Any option not understood will try to be applied to the "style" attributes, which may or may not be what you want.
-> [!NOTES]
+> [!NOTE]
 > glyphs tested with font-awesome 4.7, boxicons, bootstrap-icons 1.13.1<br/>
 > adding a glyph or number automatically reduces the dot radius to zero<br/>
-> Standard CSS specificity rules apply to SVG's, too.  Presentation attributes in SVG's have the lowest priority, element style attribes the highest.<br/>
+> Standard CSS specificity rules apply to SVG's, too.<br/>
 > URL's for images can be canonical, relative (i.e., './images/foo.png'), or dataURL's.  SVG's passed as strings will be converted to a dataURL.
 
 ## The SVGMarkerUtil class
