@@ -378,7 +378,7 @@ class SVGIcon extends Icon {
                 // handle glyphColor
                 const color = options.glyphColor || 'white';
                 if (!CSS.supports('color', color)) {
-                    console.warn(`Bad glyphColor ${options.glyphCOlor}`);
+                    console.warn(`Bad glyphColor ${options.glyphColor}`);
                     i.style.color = 'white';
                 } else {
                     i.style.color = color;
